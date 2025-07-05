@@ -12,11 +12,10 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Routes
-const indexRoutes = require('./routes/index');
-app.use('', indexRoutes);
+app.use('/api/users', require('./routes/users'));
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
 // Export the app for testing
 module.exports = app;
