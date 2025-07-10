@@ -59,6 +59,20 @@ router.post('/register', async (req, res) => {
     }
 });
 
+router.get('/get_info/:id', async (req, res) => {
+    const userId = req.params.id;
+    try {
+        const [user] = await db.query('SELECT * FROM users WHERE firebase_uid = ?', [userId]);
+        if (user.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json(user[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 module.exports = router;
 // This file defines the user-related routes for the API.
 // It includes routes for getting and updating user profiles, protected by a token verification middleware.

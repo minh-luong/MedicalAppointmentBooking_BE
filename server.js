@@ -14,7 +14,7 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/users', require('./routes/users'));
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 // Export the app for testing
