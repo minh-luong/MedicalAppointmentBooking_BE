@@ -52,7 +52,7 @@ router.post('/register', async (req, res) => {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `, [firebase_uid, full_name, email, phone_number, gender, date_of_birth, address, role]);
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(200).json({ message: 'User registered successfully' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal server error' });
@@ -66,7 +66,7 @@ router.get('/get_info/:id', async (req, res) => {
         if (user.length === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
-        res.status(200).json(user[0]);
+        res.status(200).json({ data: user[0] });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Internal server error' });
