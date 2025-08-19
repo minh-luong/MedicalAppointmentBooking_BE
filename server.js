@@ -17,6 +17,7 @@ app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/specialties', require('./routes/specialties'));
 app.use('/api/doctors', require('./routes/doctors'));
 app.use('/api/reminders', require('./routes/reminders'));
+app.use('/api/treatment_histories', require('./routes/treatment_histories'));
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${PORT}`);
