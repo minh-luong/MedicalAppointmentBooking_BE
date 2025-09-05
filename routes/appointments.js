@@ -21,10 +21,19 @@ router.post('/create', async (req, res) => {
     }
 });
 
-//Get all appointments
-router.post('/', async (req, res) => {
+// Get appointment by ID
+router.get('/:id', async (req, res) => {
+    const sql = `SELECT * FROM appointments WHERE appointment_id = ?`;
+
+    const [result] = await db.query(sql, [req.params.id]);
+    if (result.length === 0) return res.status(404).json({ message: 'Appointment not found' });
+    res.json(result[0]);
+});
+
+// Get appointments for a user
+router.get('/user/:user_id', async (req, res) => {
     try {
-        const { user_id } = req.body;
+        const { user_id } = req.params;
 
         const sql = `SELECT 
             a.appointment_id,
@@ -41,8 +50,7 @@ router.post('/', async (req, res) => {
             JOIN users u ON d.doctor_id = u.user_id
             JOIN clinics c ON d.clinic_id = c.clinic_id
             WHERE a.user_id = ?
-            ORDER BY a.appointment_time DESC
-            LIMIT 10`;
+            ORDER BY a.appointment_time DESC`;
 
         const [results] = await db.query(sql, [user_id]);
         res.status(200).json({ data: results });
@@ -52,25 +60,35 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Get appointment by ID
-router.get('/:id', async (req, res) => {
-    const sql = `SELECT * FROM appointments WHERE appointment_id = ?`;
+// Get appointments for a doctor
+router.get('/doctor/:doctor_id', async (req, res) => {
+    try {
+        const { doctor_id } = req.params;
 
-    const [result] = await db.query(sql, [req.params.id]);
-    if (result.length === 0) return res.status(404).json({ message: 'Appointment not found' });
-    res.json(result[0]);
-});
+        const sql = `SELECT 
+            a.appointment_id,
+            a.user_id,
+            a.doctor_id,
+            a.appointment_time,
+            a.symptoms,
+            a.status,
+            a.created_at,
+            u.full_name AS patient_name
+            FROM appointments a
+            JOIN users u ON a.user_id = u.user_id
+            WHERE a.doctor_id = ?
+            ORDER BY a.appointment_time DESC`;
 
-// Get appointments for a user
-router.get('/user/:user_id', async (req, res) => {
-    const sql = `SELECT * FROM appointments WHERE user_id = ? ORDER BY appointment_time DESC`;
-
-    const [results] = await db.query(sql, [req.params.user_id]);
-    res.json(results);
+        const [results] = await db.query(sql, [doctor_id]);
+        res.status(200).json({ data: results });
+    } 
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Update appointment
-router.put('/:id', async (req, res) => {
+router.post('/update/:id', async (req, res) => {
     const { appointment_time, symptoms, status } = req.body;
 
     const sql = `
@@ -84,7 +102,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete appointment
-router.delete('/:id', async (req, res) => {
+router.post('/delete/:id', async (req, res) => {
     const sql = `DELETE FROM appointments WHERE appointment_id = ?`;
 
     await db.query(sql, [req.params.id]);

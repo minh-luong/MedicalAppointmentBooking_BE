@@ -3,17 +3,18 @@ const router = express.Router();
 const db = require('../db'); // your DB connection module
 
 // CREATE treatment history
-router.post('/', async (req, res) => {
-  const { appointment_id, diagnosis, treatment, prescription, notes } = req.body;
-
+router.post('/add', async (req, res) => {
   try {
+    const { appointment_id, diagnosis, treatment, prescription, notes } = req.body;
+
     const [result] = await db.query(
       `INSERT INTO treatment_histories (appointment_id, diagnosis, treatment, prescription, notes)
              VALUES (?, ?, ?, ?, ?)`,
       [appointment_id, diagnosis, treatment, prescription, notes]
     );
-    res.status(201).json({ message: 'Treatment history added', history_id: result.insertId });
-  } catch (error) {
+    res.status(200).json({ message: 'Treatment history added', history_id: result.insertId });
+  } 
+  catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
@@ -23,14 +24,26 @@ router.get('/:id', async (req, res) => {
   try {
     const [rows] = await db.query(`SELECT * FROM treatment_histories WHERE history_id = ?`, [req.params.id]);
     if (rows.length === 0) return res.status(404).json({ message: 'Not found' });
-    res.json(rows[0]);
+    res.status(200).json({"data": rows[0]});
+  } 
+  catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET by appointment ID
+router.get('/appointment/:appointment_id', async (req, res) => {
+  try {
+    const [rows] = await db.query(`SELECT * FROM treatment_histories WHERE appointment_id = ?`, [req.params.appointment_id]);
+    if (rows.length === 0) return res.status(404).json({ message: 'Not found' });
+    res.status(200).json({"data": rows[0]});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
 // Get histories by user ID
-router.get('/get/:user_id', async (req, res) => {
+router.get('/user/:user_id', async (req, res) => {
   const { user_id } = req.params;
 
   try {
@@ -70,8 +83,9 @@ router.post('/update/:id', async (req, res) => {
 router.post('/delete/:id', async (req, res) => {
   try {
     await db.query(`DELETE FROM treatment_histories WHERE history_id = ?`, [req.params.id]);
-    res.json({ message: 'Treatment history deleted' });
-  } catch (error) {
+    res.status(200).json({ message: 'Treatment history deleted' });
+  } 
+  catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
