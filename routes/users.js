@@ -73,6 +73,31 @@ router.get('/get_info/:id', async (req, res) => {
     }
 });
 
+router.post('/update_profile/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { full_name, phone_number, gender, date_of_birth, address } = req.body;
+
+    try {
+        // Validate required fields
+        if (!full_name || !phone_number || !gender || !date_of_birth || !address) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        // Update user profile
+        await db.execute(`
+            UPDATE users
+            SET full_name = ?, phone_number = ?, gender = ?, date_of_birth = ?, address = ?
+            WHERE user_id = ?
+        `, [full_name, phone_number, gender, date_of_birth, address, userId]);
+
+        res.status(200).json({ message: 'Profile updated successfully' });
+    } 
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+});
+
 module.exports = router;
 // This file defines the user-related routes for the API.
 // It includes routes for getting and updating user profiles, protected by a token verification middleware.

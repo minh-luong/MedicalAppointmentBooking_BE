@@ -27,11 +27,11 @@ router.get('/:id', async (req, res) => {
 
     const [result] = await db.query(sql, [req.params.id]);
     if (result.length === 0) return res.status(404).json({ message: 'Appointment not found' });
-    res.json(result[0]);
+    res.status(200).json({"data": result[0]});
 });
 
-// Get appointments for a user
-router.get('/user/:user_id', async (req, res) => {
+// Get upcoming appointments for a user
+router.get('/upcoming/user/:user_id', async (req, res) => {
     try {
         const { user_id } = req.params;
 
@@ -49,7 +49,7 @@ router.get('/user/:user_id', async (req, res) => {
             JOIN doctors d ON a.doctor_id = d.doctor_id
             JOIN users u ON d.doctor_id = u.user_id
             JOIN clinics c ON d.clinic_id = c.clinic_id
-            WHERE a.user_id = ?
+            WHERE a.user_id = ? AND a.status = 'pending'
             ORDER BY a.appointment_time DESC`;
 
         const [results] = await db.query(sql, [user_id]);
@@ -76,7 +76,7 @@ router.get('/doctor/:doctor_id', async (req, res) => {
             u.full_name AS patient_name
             FROM appointments a
             JOIN users u ON a.user_id = u.user_id
-            WHERE a.doctor_id = ?
+            WHERE a.doctor_id = ? AND a.status != 'cancelled'
             ORDER BY a.appointment_time DESC`;
 
         const [results] = await db.query(sql, [doctor_id]);
@@ -87,18 +87,40 @@ router.get('/doctor/:doctor_id', async (req, res) => {
     }
 });
 
-// Update appointment
-router.post('/update/:id', async (req, res) => {
-    const { appointment_time, symptoms, status } = req.body;
+// Update time of appointment
+router.post('/update/time/:id', async (req, res) => {
+    try {
+        const { appointment_time } = req.body;
 
-    const sql = `
-    UPDATE appointments
-    SET appointment_time = ?, symptoms = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE appointment_id = ?
-  `;
+        const sql = `
+            UPDATE appointments
+            SET appointment_time = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE appointment_id = ?
+            `;
 
-    await db.query(sql, [appointment_time, symptoms, status, req.params.id]);
-    res.json({ message: 'Appointment updated' });
+        await db.query(sql, [appointment_time, req.params.id]);
+        res.status(200).json({ message: 'Appointment updated' });
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Cancel appointment
+router.post('/cancel/:id', async (req, res) => {
+    try {
+        const sql = `
+            UPDATE appointments
+            SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
+            WHERE appointment_id = ?
+        `;
+
+        await db.query(sql, [req.params.id]);
+        res.status(200).json({ message: 'Appointment cancelled' });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Delete appointment

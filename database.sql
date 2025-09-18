@@ -7,6 +7,7 @@ CREATE TABLE users (
     gender VARCHAR(10),
     date_of_birth DATE,
     address TEXT,
+    fcm_token VARCHAR(255),
     role VARCHAR(10),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -39,13 +40,20 @@ CREATE TABLE doctors (
     FOREIGN KEY (specialty_id) REFERENCES specialties(specialty_id)
 );
 
-CREATE TABLE fcm_token (
-    user_id INT PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
+CREATE TABLE login_tokens (
+    token_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(512) NOT NULL,
+    device_info TEXT,
+    ip_address VARCHAR(45),
+    is_active BOOLEAN DEFAULT TRUE,
+    expires_at DATETIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
 
 CREATE TABLE appointments (
     appointment_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,7 +61,7 @@ CREATE TABLE appointments (
     doctor_id INT NOT NULL,
     appointment_time DATETIME NOT NULL,
     symptoms TEXT,
-    status VARCHAR(40) DEFAULT 'pending', -- pending, confirmed, cancelled
+    status VARCHAR(40) DEFAULT 'pending', -- pending, completed, cancelled
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -88,4 +96,15 @@ CREATE TABLE treatment_histories (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id)
+);
+
+CREATE TABLE notifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL, -- e.g., appointment, medication, doctor_message
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
