@@ -4,7 +4,7 @@ const router = express.Router();
 router.get('/', (req, res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json');
-    res.json({ message: 'Hello from API!' });
+    res.status(200).json({ message: 'Hello from API!' });
 });
 
 module.exports = router;

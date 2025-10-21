@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -18,6 +19,8 @@ app.use('/api/specialties', require('./routes/specialties'));
 app.use('/api/doctors', require('./routes/doctors'));
 app.use('/api/reminders', require('./routes/reminders'));
 app.use('/api/treatment_histories', require('./routes/treatment_histories'));
+app.use('/api/clinics', require('./routes/clinic'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on http://localhost:${PORT}`);

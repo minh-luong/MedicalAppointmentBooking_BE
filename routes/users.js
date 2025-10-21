@@ -1,102 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const controller = require('../controllers/userController');
+const authController = require('../controllers/authController');
 
-router.post('/register', async (req, res) => {
-    try {
-        const { firebase_uid, full_name, email, phone_number, gender, date_of_birth, address, role } = req.body;
-
-        // Validate required fields
-        if (!firebase_uid || !full_name || !email || !phone_number || !gender || !date_of_birth || !address || !role) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        // Check if user already exists
-        const [existingUser] = await db.query('SELECT * FROM users WHERE firebase_uid = ?', [firebase_uid]);
-        if (existingUser.length > 0) {
-            return res.status(409).json({ message: 'User already exists' });
-        }
-
-        // Validate email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: 'Invalid email format' });
-        }
-
-        // Validate phone number format (simple check, can be improved)
-        const phoneRegex = /^\d{10}$/; // Assuming 10-digit phone numbers
-        if (!phoneRegex.test(phone_number)) {
-            return res.status(400).json({ message: 'Invalid phone number format' });
-        }
-
-        // Validate date of birth format (YYYY-MM-DD)
-        const dobRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dobRegex.test(date_of_birth)) {
-            return res.status(400).json({ message: 'Invalid date of birth format' });
-        }
-
-        // Validate role
-        const validRoles = ['user', 'doctor', 'admin'];
-        if (!validRoles.includes(role)) {
-            return res.status(400).json({ message: 'Invalid role' });
-        }
-
-        // Check if the user is an admin
-        if (role === 'admin') {
-            // Admin-specific logic (if any)
-        }
-
-        // Insert new user
-        await db.execute(`
-            INSERT INTO users (firebase_uid, full_name, email, phone_number, gender, date_of_birth, address, role)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `, [firebase_uid, full_name, email, phone_number, gender, date_of_birth, address, role]);
-
-        res.status(200).json({ message: 'User registered successfully' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-router.get('/get_info/:id', async (req, res) => {
-    const userId = req.params.id;
-    try {
-        const [user] = await db.query('SELECT * FROM users WHERE firebase_uid = ?', [userId]);
-        if (user.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.status(200).json({ data: user[0] });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
-
-router.post('/update_profile/:id', async (req, res) => {
-    const userId = req.params.id;
-    const { full_name, phone_number, gender, date_of_birth, address } = req.body;
-
-    try {
-        // Validate required fields
-        if (!full_name || !phone_number || !gender || !date_of_birth || !address) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
-        // Update user profile
-        await db.execute(`
-            UPDATE users
-            SET full_name = ?, phone_number = ?, gender = ?, date_of_birth = ?, address = ?
-            WHERE user_id = ?
-        `, [full_name, phone_number, gender, date_of_birth, address, userId]);
-
-        res.status(200).json({ message: 'Profile updated successfully' });
-    } 
-    catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-});
+router.post('/login_by_token', controller.loginByToken);
+router.post('/register', controller.register);
+router.post('/get_info', controller.getInfo);
+router.post('/update_profile', controller.updateProfile);
+router.post('/get_token', authController.getToken);
 
 module.exports = router;
 // This file defines the user-related routes for the API.
